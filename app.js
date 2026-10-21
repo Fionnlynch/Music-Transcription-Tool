@@ -2,23 +2,77 @@ const audioFile = document.getElementById('audio-file');
 const audioPlayer = document.getElementById('audio-player');
 const speedSlider = document.getElementById('speed-slider');
 const speedValue = document.getElementById('speed-value');
+const filterSlider = document.getElementById('filter-slider');
+const filterStatus = document.getElementById('filter-status');
 
-// 1. Load the uploaded audio file into the player
+// Web Audio API Context variables
+let audioContext;
+let trackNode;
+let biquadFilter;
+
+// 1. Initialize the Hardware Audio Graph on first user interaction
+function initAudioGraph() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Route the HTML audio element into our JavaScript audio graph
+        trackNode = audioContext.createMediaElementSource(audioPlayer);
+        
+        // Create an advanced bandpass filter (suppresses extreme highs and lows)
+        biquadFilter = audioContext.createBiquadFilter();
+        biquadFilter.type = "bandpass";
+        biquadFilter.frequency.value = 1000; // Focus point: 1kHz (human hearing sweet spot)
+        biquadFilter.Q.value = 1.0;          // Filter sharpness width
+        
+        // Connect the nodes: Player -> Filter -> Speakers
+        trackNode.connect(biquadFilter);
+        biquadFilter.connect(audioContext.destination);
+    }
+}
+
+// 2. Load the uploaded audio file into the player
 audioFile.addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const fileURL = URL.createObjectURL(file);
+    const file = event.target.files;
+    if (file && file[0]) {
+        const fileURL = URL.createObjectURL(file[0]);
         audioPlayer.src = fileURL;
     }
 });
 
-// 2. Change playback speed in real-time
+// 3. Change playback speed in real-time
 speedSlider.addEventListener('input', function(event) {
     const speed = event.target.value;
     audioPlayer.playbackRate = speed;
     speedValue.textContent = `${parseFloat(speed).toFixed(1)}x`;
 });
 
+// 4. Acoustic Focus Isolation Engine (Bypasses/Engages the Filter)
+filterSlider.addEventListener('input', function(event) {
+    // Web Audio requires a user interaction to boot the audio hardware safely
+    initAudioGraph();
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
+    const state = parseInt(event.target.value);
+    
+    if (state === 1) {
+        // ENGAGE FILTER: Isolate the audio sweet spot
+        biquadFilter.frequency.setValueAtTime(1000, audioContext.currentTime);
+        filterStatus.textContent = "ISOLATED (1kHz)";
+        filterStatus.style.color = "#38bdf8";
+        
+        // Sever direct player-to-speaker path so only filtered sound passes
+        trackNode.disconnect(audioContext.destination);
+    } else {
+        // BYPASS FILTER: Clean, unaltered original audio track
+        filterStatus.textContent = "OFF";
+        filterStatus.style.color = "#94a3b8";
+        
+        // Re-route audio directly to speakers
+        trackNode.connect(audioContext.destination);
+    }
+});
 
 // =========================================================================
 // FUTURE ROADMAP ARCHITECTURE: Visualizer Theme Configuration (OOP Practice)

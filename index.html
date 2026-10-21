@@ -19,10 +19,18 @@
         <section class="controls-section">
             <audio id="audio-player" controls></audio>
             
+            <!-- Speed Modifier Slider -->
             <div class="playback-speed">
                 <label for="speed-slider">Playback Speed:</label>
                 <input type="range" id="speed-slider" min="0.5" max="1.5" step="0.1" value="1">
                 <span id="speed-value">1.0x</span>
+            </div>
+
+            <!-- Real-Time Acoustic Focus/Isolation Filter -->
+            <div class="playback-filter">
+                <label for="filter-slider">Acoustic Focus (Isolate Midrange):</label>
+                <input type="range" id="filter-slider" min="0" max="1" step="1" value="0">
+                <span id="filter-status">OFF</span>
             </div>
         </section>
 

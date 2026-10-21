@@ -86,3 +86,19 @@ input[type="range"] {
 #visualizer {
     display: none; /* Hidden until future audio API integration */
 }
+
+.playback-filter {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+    color: var(--text-muted);
+    margin-top: 1rem;
+}
+#filter-status {
+    font-weight: bold;
+    color: var(--text-muted);
+    min-width: 40px;
+    font-size: 0.85rem;
+}
